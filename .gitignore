@@ -1,0 +1,12 @@
+/.idea
+/.DS_Store
+/build
+/dist
+/.tox
+/.coverage*
+/venv
+
+afsk.egg-info
+__pycache__
+_trial_temp/
+*.wav
