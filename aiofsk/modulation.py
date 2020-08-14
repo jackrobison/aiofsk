@@ -3,7 +3,6 @@ import contextlib
 import asyncio
 import queue
 import numpy as np
-from aiofsk.ecc import HAMMING_8_4_CODE
 from aiofsk.baud import BaudRate, TONES
 
 
@@ -62,14 +61,8 @@ class Modulator:
 
     @staticmethod
     def iter_symbols(char):
-        first = HAMMING_8_4_CODE.encode(char & 0b00001111)
-        second = HAMMING_8_4_CODE.encode((char & 0b11110000) >> 4)
-
         for bit in range(7, -1, -1):
-            yield str((first >> bit) % 2)
-
-        for bit in range(7, -1, -1):
-            yield str((second >> bit) % 2)
+            yield str((char >> bit) % 2)
 
     @contextlib.contextmanager
     def get_modulation_context(self):
@@ -120,22 +113,7 @@ class Modulator:
                     current_byte <<= 1
                     window = await audio_in.get()
                     current_byte += demodulate_bit(window)
-                first_nibble = HAMMING_8_4_CODE.decode(current_byte)
-                current_byte = 0
-                for _ in range(8):
-                    print("bit b")
-                    current_byte <<= 1
-                    window = await audio_in.get()
-                    current_byte += demodulate_bit(window)
-                second_nibble = HAMMING_8_4_CODE.decode(current_byte)
-                # print(bin((second_nibble << 4) + first_nibble))
-                if first_nibble == -1 or second_nibble == -1:
-                    print("fnord")
-                    1/0
-                decoded = ((second_nibble << 4) + first_nibble)
-                # print("decoded ", bin(decoded))
-                got_byte = decoded.to_bytes(1, byteorder='little')
-                print("got ", got_byte )
+                got_byte = current_byte.to_bytes(1, byteorder='little')
                 data_out.put_nowait(got_byte)
                 # print(f'{current_byte:#010b}'[2:], f' - {got_byte}')
 
